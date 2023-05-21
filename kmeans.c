@@ -1,7 +1,7 @@
 #define _GNU_SOURCE
 #include <stdlib.h>
 #include<stdio.h>
-
+#include<math.h>
 
 int chr_until_comma(const char * str);
 int initialize(double *** arr_ptr, int * num_of_coordinates_ptr, int * N_ptr);
@@ -13,6 +13,7 @@ int check_input(int argc, char* argv[], int* iterations_pointer, int* K_pointer)
 int initialize_centroids_arr(double*** centroids_arr_pointer, int K, int num_of_iterations,double** datapoints_arr);
 int kmeans_algoritm(int iterations, double** centroids_arr, double** datapoints_arr,int num_of_datapoints, int num_of_coordinates, int K);
 void print_result(int iterations, double** centroids_arr, double** new_centroids_arr, int num_of_coordinates, int K);
+void free_arrays(int iterations, int num_of_datapoints,double** centroids_arr, double** new_centroids_arr, int K, int* datapoints_num_in_centroids, double** datapoints_arr);
 
 
 int initialize(double *** arr_ptr, int * num_of_coordinates_ptr, int * N_ptr) {
@@ -68,6 +69,7 @@ int main(int argc, char * argv[]) {
     double** centroids_arr;
     int K;
     int iterations;
+    int i;
 
     if(!check_input(argc,argv, &iterations, &K)){
         return 1;
@@ -78,8 +80,12 @@ int main(int argc, char * argv[]) {
         return 1;
     }
     if (K >= num_of_datapoints){
-         printf("Invalid number of clusters!");
-         return 1;
+        for (i = 0; i < num_of_datapoints; i++) {
+        free(datapoints_arr[i]);
+    }
+        free(datapoints_arr);
+        printf("Invalid number of clusters!");
+        return 1;
     }
 
     if(!initialize_centroids_arr(&centroids_arr, K, num_of_coordinates, datapoints_arr)){
@@ -141,9 +147,9 @@ double euclidean_distance(double *datapoint1, double *datapoint2, int num_of_coo
    double sum = 0;
    int i;
    for (i = 0; i < num_of_coordinates; i++){
-       sum += (datapoint1[i] - datapoint2[i]) * (datapoint1[i] - datapoint2[i]);
+       sum +=  pow((datapoint1[i] - datapoint2[i]), 2);
    }
-   return sum;
+   return sqrt(sum);
 }
 
 
@@ -302,26 +308,7 @@ int kmeans_algoritm(int iterations, double** centroids_arr, double** datapoints_
         iterations--;
     }
     print_result(iterations, centroids_arr, new_centroids_arr, num_of_coordinates, K);
-    if (iterations > 0){
-        for(i = 0; i < K; i++){
-                free(centroids_arr[i]);
-                free(new_centroids_arr[i]);
-            }
-            free(centroids_arr);
-            free(new_centroids_arr);
-    }   
-    else{
-        for(i=0; i < K; i++){
-            free(centroids_arr[i]);
-        }
-        free(centroids_arr);
-    }
-
-    free(datapoints_num_in_centroids);
-    for (i = 0; i < num_of_datapoints; i++) {
-        free(datapoints_arr[i]);
-    }
-    free(datapoints_arr);
+    free_arrays(iterations, num_of_datapoints, centroids_arr, new_centroids_arr, K, datapoints_num_in_centroids, datapoints_arr);
     return 1;
 }
 
@@ -353,4 +340,28 @@ void print_result(int iterations, double** centroids_arr, double** new_centroids
         }
         printf("\n");
  }
+}
+
+void free_arrays(int iterations, int num_of_datapoints,double** centroids_arr, double** new_centroids_arr, int K, int* datapoints_num_in_centroids, double** datapoints_arr){
+    int i;
+    if (iterations > 0){
+        for(i = 0; i < K; i++){
+                free(centroids_arr[i]);
+                free(new_centroids_arr[i]);
+            }
+            free(centroids_arr);
+            free(new_centroids_arr);
+    }   
+    else{
+        for(i=0; i < K; i++){
+            free(centroids_arr[i]);
+        }
+        free(centroids_arr);
+    }
+
+    free(datapoints_num_in_centroids);
+    for (i = 0; i < num_of_datapoints; i++) {
+        free(datapoints_arr[i]);
+    }
+    free(datapoints_arr);
 }
